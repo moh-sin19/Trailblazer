@@ -59,6 +59,7 @@ htmlcov/
 Thumbs.db
 
 # Project specific
+project.md
 **/.playwright-mcp/
 backend/media/**
 
