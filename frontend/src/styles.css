@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MapLibre default styles for controls/popups */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* App-global tweaks */
+:root { --navbar-height: 64px; }
+html, body { height: 100%; }
+#map { height: calc(100vh - var(--navbar-height)); }

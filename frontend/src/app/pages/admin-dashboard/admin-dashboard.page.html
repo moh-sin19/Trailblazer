@@ -1,0 +1,196 @@
+<div class="mx-auto max-w-6xl px-4 py-10 space-y-8" *ngIf="!loading; else loadingTpl">
+  <ng-container *ngIf="!accessDenied; else deniedTpl">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold text-bush-700">Admin dashboard</h1>
+        <p class="text-sm text-gray-600">Manage user access, review community contributions, and keep the platform healthy.</p>
+      </div>
+      <button
+        type="button"
+        (click)="refreshAll()"
+        class="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        ↻ Refresh data
+      </button>
+    </div>
+
+    <div *ngIf="errorMessage" class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ errorMessage }}
+    </div>
+
+    <section aria-labelledby="dashboard-stats">
+      <h2 id="dashboard-stats" class="text-lg font-medium text-gray-800 mb-3">Platform snapshot</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-500">Total users</p>
+          <p class="text-2xl font-semibold text-bush-700">{{ dashboard?.stats.totalUsers ?? 0 | number }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-500">New this week</p>
+          <p class="text-2xl font-semibold text-bush-700">{{ dashboard?.stats.newUsersLast7Days ?? 0 | number }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-500">Pending submissions</p>
+          <p class="text-2xl font-semibold text-bush-700">{{ dashboard?.stats.pendingTrailSubmissions ?? 0 | number }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-500">Published trails</p>
+          <p class="text-2xl font-semibold text-bush-700">{{ dashboard?.stats.publishedTrails ?? 0 | number }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-500">Active comments</p>
+          <p class="text-2xl font-semibold text-bush-700">{{ dashboard?.stats.activeComments ?? 0 | number }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="manage-users" class="space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h2 id="manage-users" class="text-lg font-medium text-gray-800">Manage users</h2>
+        <span class="text-xs uppercase tracking-wide text-gray-500">Role-based access control</span>
+      </div>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr class="text-left">
+              <th class="px-4 py-2 font-medium text-gray-600">User</th>
+              <th class="px-4 py-2 font-medium text-gray-600">Role</th>
+              <th class="px-4 py-2 font-medium text-gray-600">Status</th>
+              <th class="px-4 py-2 font-medium text-gray-600">Last login</th>
+              <th class="px-4 py-2 font-medium text-gray-600 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let user of users" class="align-top">
+              <td class="px-4 py-3">
+                <div class="font-medium text-gray-900">{{ user.displayName }}</div>
+                <div class="text-xs text-gray-500">&#64;{{ user.username }} · {{ user.email }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <select
+                  class="mt-1 w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
+                  [ngModel]="user.role"
+                  (ngModelChange)="onRoleChange(user, $event)"
+                  [disabled]="getUserBusyState(user.id)"
+                >
+                  <option value="standard">Standard user</option>
+                  <option value="admin">Administrator</option>
+                </select>
+                <div class="text-xs text-gray-500 mt-1">{{ user.roleLabel }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class.bg-green-100]="user.isActive"
+                  [class.text-green-700]="user.isActive"
+                  [class.bg-gray-100]="!user.isActive"
+                  [class.text-gray-600]="!user.isActive"
+                >
+                  {{ user.isActive ? 'Active' : 'Disabled' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-700">
+                <span *ngIf="user.lastLogin; else neverLogged">{{ user.lastLogin | date:'medium' }}</span>
+                <ng-template #neverLogged><span class="text-gray-400">Never</span></ng-template>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-md border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                  (click)="toggleUserActive(user)"
+                  [disabled]="getUserBusyState(user.id)"
+                >
+                  {{ user.isActive ? 'Disable account' : 'Re-enable' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="users.length === 0">
+              <td colspan="5" class="px-4 py-6 text-center text-gray-500">No users found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="trail-submissions" class="space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h2 id="trail-submissions" class="text-lg font-medium text-gray-800">Trail submissions awaiting review</h2>
+        <span class="text-xs text-gray-500">Approve or request changes</span>
+      </div>
+      <div class="space-y-4">
+        <div *ngFor="let submission of pendingSubmissions" class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold text-bush-700">{{ submission.name }}</h3>
+              <p class="text-xs text-gray-500">
+                Difficulty: {{ submission.difficulty | titlecase }} · Distance: {{ submission.distanceKm | number:'1.0-1' }} km ·
+                Elevation gain: {{ submission.elevationGainM }} m
+              </p>
+              <p class="mt-2 text-sm text-gray-600" *ngIf="submission.description">{{ submission.description }}</p>
+              <p class="mt-1 text-xs text-gray-500" *ngIf="submission.submittedBy">
+                Submitted by {{ submission.submittedBy.displayName }} (&#64;{{ submission.submittedBy.username }})
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <a
+                [routerLink]="['/admin/review-trail', submission.id]"
+                class="inline-flex items-center rounded-md bg-bush-600 px-4 py-2 text-xs font-medium text-white hover:bg-bush-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500"
+              >
+                Review Details →
+              </a>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="pendingSubmissions.length === 0" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
+          Nothing waiting right now. You’re all caught up!
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="comment-moderation" class="space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h2 id="comment-moderation" class="text-lg font-medium text-gray-800">Comment moderation</h2>
+        <span class="text-xs text-gray-500">Hide inappropriate content without deleting permanently</span>
+      </div>
+      <div class="space-y-3">
+        <article *ngFor="let comment of recentComments" class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+          <header class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-gray-900">{{ comment.authorDisplayName }} <span class="text-xs text-gray-500">(&#64;{{ comment.authorUsername }})</span></p>
+              <p class="text-xs text-gray-500">{{ comment.trailName }} · {{ comment.createdAt | date:'medium' }}</p>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-md border border-gray-200 px-3 py-1 text-xs font-medium hover:bg-gray-100 disabled:opacity-60"
+              (click)="toggleCommentVisibility(comment)"
+              [disabled]="getCommentBusyState(comment.id)"
+              [class.text-red-600]="!comment.isDeleted"
+              [class.text-gray-700]="comment.isDeleted"
+            >
+              {{ comment.isDeleted ? 'Restore comment' : 'Hide comment' }}
+            </button>
+          </header>
+          <p class="mt-3 text-sm text-gray-700" [class.line-through]="comment.isDeleted">{{ comment.body || '—' }}</p>
+          <p class="mt-2 text-xs text-gray-500" *ngIf="comment.rating">Rating: {{ comment.rating }}/5</p>
+        </article>
+        <div *ngIf="recentComments.length === 0" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
+          No recent comments to moderate.
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-20 text-center text-gray-600">
+    <span class="inline-flex h-10 w-10 animate-spin items-center justify-center rounded-full border-2 border-gray-200 border-t-bush-600"></span>
+    <p class="text-sm">Loading admin data…</p>
+  </div>
+</ng-template>
+
+<ng-template #deniedTpl>
+  <div class="mx-auto max-w-4xl rounded-lg border border-red-200 bg-red-50 px-6 py-10 text-center text-red-700">
+    <h2 class="text-xl font-semibold mb-2">Admin access required</h2>
+    <p class="text-sm">You need an admin account to view this page. Please sign in with an admin account or contact the site owner.</p>
+  </div>
+</ng-template>

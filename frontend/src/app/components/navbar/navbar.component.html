@@ -1,0 +1,49 @@
+<nav class="sticky top-0 z-40 h-[var(--navbar-height)] bg-white/90 backdrop-blur border-b border-gray-200">
+  <div class="mx-auto max-w-7xl h-full flex items-center justify-between px-4">
+    <a routerLink="/" class="flex items-center gap-2 font-semibold text-bush-700">
+      <img src="assets/logo.svg" alt="Trailblazer" class="w-7 h-7">
+      <span class="hidden sm:block">Trailblazer</span>
+    </a>
+    <div class="flex items-center gap-4 text-sm">
+      <a routerLink="/" routerLinkActive="text-bush-600 font-semibold" class="hover:text-bush-600">Discover</a>
+      <a routerLink="/submit" routerLinkActive="text-bush-600 font-semibold" class="hover:text-bush-600">Submit trail</a>
+      <ng-container *ngIf="profile$ | async as profile; else guestLinks">
+        <a
+          *ngIf="profile.role === 'admin'"
+          routerLink="/admin"
+          routerLinkActive="text-bush-600 font-semibold"
+          class="hover:text-bush-600"
+        >
+          Admin
+        </a>
+        <a routerLink="/profile" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-bush-50 text-bush-700 hover:bg-bush-100 transition">
+          <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-bush-100 text-xs font-semibold text-bush-700">
+            {{ profile.displayName.slice(0, 1).toUpperCase() }}
+          </span>
+          <span class="text-sm font-medium">{{ profile.displayName }}</span>
+        </a>
+        <button
+          type="button"
+          (click)="onLogout()"
+          [disabled]="loggingOut"
+          class="inline-flex items-center justify-center rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+        >
+          <span *ngIf="!loggingOut">Sign out</span>
+          <span *ngIf="loggingOut">Signing out…</span>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+  <ng-template #guestLinks>
+    <a routerLink="/login" routerLinkActive="text-bush-600 font-semibold" class="hover:text-bush-600">Sign in</a>
+    <a routerLink="/signup" class="inline-flex items-center justify-center rounded-md bg-bush-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-bush-700">
+      Create account
+    </a>
+  </ng-template>
+
+  <div *ngIf="logoutError" class="px-4 pb-3">
+    <div class="mx-auto max-w-7xl rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ logoutError }}
+    </div>
+  </div>
+</nav>

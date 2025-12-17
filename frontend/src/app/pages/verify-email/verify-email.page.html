@@ -1,0 +1,48 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full">
+    <div class="bg-white rounded-lg shadow-md p-8 space-y-6">
+      <div class="text-center space-y-2">
+        <h1 class="text-3xl font-bold text-gray-900">Verify your email</h1>
+        <p class="text-gray-600" *ngIf="status === 'idle'">Checking your verification link…</p>
+      </div>
+
+      <ng-container [ngSwitch]="status">
+        <div *ngSwitchCase="'loading'" class="flex flex-col items-center gap-3 text-gray-600">
+          <svg class="animate-spin h-6 w-6 text-bush-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <p>Verifying your email address…</p>
+        </div>
+
+        <div *ngSwitchCase="'success'" class="space-y-4 text-sm text-gray-700">
+          <div class="p-4 rounded-md border border-green-200 bg-green-50 text-green-800">
+            <h2 class="text-lg font-semibold text-green-900">Email verified!</h2>
+            <p class="mt-2">
+              Thanks {{ verifiedUser?.profile.displayName || verifiedUser?.username }}, your email address is confirmed.
+            </p>
+            <p class="mt-2">
+              You can now sign in and start exploring trails.
+            </p>
+          </div>
+          <a
+            routerLink="/login"
+            class="inline-flex w-full items-center justify-center rounded-md bg-bush-600 px-4 py-2 text-sm font-medium text-white hover:bg-bush-700"
+          >
+            Continue to sign in
+          </a>
+        </div>
+
+        <div *ngSwitchCase="'error'" class="space-y-4 text-sm">
+          <div class="p-4 rounded-md border border-red-200 bg-red-50 text-red-800">
+            <h2 class="text-lg font-semibold text-red-900">Verification failed</h2>
+            <p class="mt-2">{{ errorMessage }}</p>
+          </div>
+          <a routerLink="/signup" class="inline-flex w-full items-center justify-center rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            Create a new account
+          </a>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

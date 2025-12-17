@@ -1,0 +1,111 @@
+<div class="max-w-7xl mx-auto px-4">
+    <!-- Search and Filters -->
+    <div class="mt-3 mb-4 space-y-3">
+        <!-- Search Bar -->
+        <div class="flex gap-2">
+            <input [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" placeholder="Search trails..."
+                class="flex-1 border rounded px-3 py-2 text-sm" />
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Difficulty -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Difficulty</label>
+                <select [(ngModel)]="difficulty" (change)="applyFilters()" class="border rounded px-2 py-1 text-sm">
+                    <option value="All">All</option>
+                    <option value="easy">Easy</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <!-- Distance Range -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Distance (km)</label>
+                <input type="number" [(ngModel)]="distanceMin" (ngModelChange)="applyFilters()" min="0"
+                    [max]="distanceMax" step="0.5" class="border rounded px-2 py-1 text-sm w-20" />
+                <span class="text-xs text-gray-500">to</span>
+                <input type="number" [(ngModel)]="distanceMax" (ngModelChange)="applyFilters()" [min]="distanceMin"
+                    max="2000" step="0.5" class="border rounded px-2 py-1 text-sm w-20" />
+            </div>
+
+            <!-- City -->
+            <div class="flex items-center gap-2" *ngIf="filterOptions?.cities.length">
+                <label class="text-sm text-gray-600">City</label>
+                <select [(ngModel)]="selectedCity" (change)="applyFilters()" class="border rounded px-2 py-1 text-sm">
+                    <option value="">All</option>
+                    <option *ngFor="let city of filterOptions.cities" [value]="city">{{city}}</option>
+                </select>
+            </div>
+
+            <!-- Country -->
+            <div class="flex items-center gap-2" *ngIf="filterOptions?.countries.length">
+                <label class="text-sm text-gray-600">Country</label>
+                <select [(ngModel)]="selectedCountry" (change)="applyFilters()"
+                    class="border rounded px-2 py-1 text-sm">
+                    <option value="">All</option>
+                    <option *ngFor="let country of filterOptions.countries" [value]="country">{{country}}</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div *ngIf="filterOptions?.categories.length" class="flex flex-wrap items-center gap-2">
+            <label class="text-sm text-gray-600">Categories:</label>
+            <button *ngFor="let cat of filterOptions.categories" (click)="toggleCategory(cat.id)"
+                [ngClass]="{
+                    'bg-bush-600 text-white border-bush-600 hover:bg-bush-700': isCategorySelected(cat.id),
+                    'hover:bg-gray-50': !isCategorySelected(cat.id)
+                }"
+                class="px-3 py-1 text-xs border rounded-full">
+                {{cat.name}}
+            </button>
+            <span *ngIf="selectedCategories.length > 0" class="text-xs text-gray-500">
+                ({{selectedCategories.length}}/10 selected)
+            </span>
+        </div>
+
+        <!-- Results Count -->
+        <div class="text-sm text-gray-600">
+            Found {{totalCount}} trail{{totalCount !== 1 ? 's' : ''}}
+        </div>
+    </div>
+
+    <div class="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-6 lg:items-start overflow-hidden">
+        <!-- Map -->
+        <div [class.hidden]="view!=='map'" [class.block]="view==='map'" class="relative lg:block lg:h-[calc(100vh-260px)] lg:min-h-[360px] min-w-0">
+            <div #mapEl id="map" class="w-full h-[420px] lg:h-full rounded-lg overflow-hidden border"></div>
+            <div
+                class="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg shadow px-4 py-3 border border-gray-200 text-xs text-gray-700">
+                <div class="font-semibold text-gray-800 uppercase tracking-wide mb-2">Route Legend</div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-1.5 rounded-full" style="background-color:#2a9d8f"></span>
+                        <span>Easy</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-1.5 rounded-full" style="background-color:#f4a261"></span>
+                        <span>Moderate</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-1.5 rounded-full" style="background-color:#e76f51"></span>
+                        <span>Hard</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-1.5 rounded-full" style="background-color:#1d4ed8"></span>
+                        <span>Selected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div [class.hidden]="view!=='list'" [class.block]="view==='list'"
+            class="mt-6 lg:mt-0 lg:block lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto lg:pr-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                <app-trail-card *ngFor="let t of filtered" [trail]="t"></app-trail-card>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,234 @@
+[
+  {
+    "id": "bondi-coogee",
+    "name": "Bondi to Coogee Coastal Walk",
+    "park": "Eastern Suburbs Coastal Walkway",
+    "difficulty": "Moderate",
+    "rating": 4.6,
+    "review_count": 412,
+    "description": "Iconic clifftop path linking beaches, pools, and cafes. Exposed to wind and sun.",
+    "start": {
+      "lat": -33.8915,
+      "lng": 151.2767
+    },
+    "coords": [
+      {
+        "lat": -33.8915,
+        "lng": 151.2767
+      },
+      {
+        "lat": -33.9246,
+        "lng": 151.2593
+      }
+    ],
+    "distance_km": 6.0,
+    "ascent_m": 120,
+    "time_hours": 2.0,
+    "dog_friendly": false,
+    "public_transport": true,
+    "tags": [
+      "coastal",
+      "family",
+      "swim stops"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1510741426656-c1a7930d7a71?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "grand-canyon",
+    "name": "Grand Canyon Track",
+    "park": "Blue Mountains NP",
+    "difficulty": "Moderate",
+    "rating": 4.8,
+    "review_count": 305,
+    "description": "Sandstone gorge, rainforest ferns, waterfalls. Ladders and creek crossings.",
+    "start": {
+      "lat": -33.6355,
+      "lng": 150.3714
+    },
+    "coords": [
+      {
+        "lat": -33.6355,
+        "lng": 150.3714
+      },
+      {
+        "lat": -33.6455,
+        "lng": 150.3814
+      }
+    ],
+    "distance_km": 6.3,
+    "ascent_m": 200,
+    "time_hours": 3.0,
+    "dog_friendly": false,
+    "public_transport": true,
+    "tags": [
+      "gorge",
+      "waterfalls"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "coast-track-royal",
+    "name": "Royal National Park Coast Track (Bundeena \u2194 Otford)",
+    "park": "Royal National Park",
+    "difficulty": "Hard",
+    "rating": 4.7,
+    "review_count": 221,
+    "description": "Clifftop views, beaches, heath. Do a section or thru with car shuffle.",
+    "start": {
+      "lat": -34.0831,
+      "lng": 151.1519
+    },
+    "coords": [
+      {
+        "lat": -34.0831,
+        "lng": 151.1519
+      },
+      {
+        "lat": -34.215,
+        "lng": 151.0
+      }
+    ],
+    "distance_km": 26.0,
+    "ascent_m": 900,
+    "time_hours": 10,
+    "dog_friendly": false,
+    "public_transport": true,
+    "tags": [
+      "coastal",
+      "epic"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1519281053-6d6b5ce1f4e1?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "manly-dam",
+    "name": "Manly Dam Circuit",
+    "park": "Manly Warringah Memorial Park",
+    "difficulty": "Moderate",
+    "rating": 4.4,
+    "review_count": 144,
+    "description": "Lake views, bushland, shared with MTB in sections. Lots of shade.",
+    "start": {
+      "lat": -33.7777,
+      "lng": 151.2474
+    },
+    "coords": [
+      {
+        "lat": -33.7777,
+        "lng": 151.2474
+      },
+      {
+        "lat": -33.783,
+        "lng": 151.252
+      }
+    ],
+    "distance_km": 9.7,
+    "ascent_m": 250,
+    "time_hours": 3.0,
+    "dog_friendly": true,
+    "public_transport": false,
+    "tags": [
+      "lake",
+      "shade"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "barrenjoey",
+    "name": "Barrenjoey Lighthouse Walk",
+    "park": "Ku-ring-gai Chase NP",
+    "difficulty": "Easy",
+    "rating": 4.5,
+    "review_count": 198,
+    "description": "Short steep climb to historic lighthouse with panoramic headland views.",
+    "start": {
+      "lat": -33.5806,
+      "lng": 151.3248
+    },
+    "coords": [
+      {
+        "lat": -33.5806,
+        "lng": 151.3248
+      },
+      {
+        "lat": -33.58,
+        "lng": 151.323
+      }
+    ],
+    "distance_km": 2.5,
+    "ascent_m": 120,
+    "time_hours": 1.0,
+    "dog_friendly": false,
+    "public_transport": true,
+    "tags": [
+      "views",
+      "history"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1540205169376-7d79da82bb5f?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "spit-to-manly",
+    "name": "Spit Bridge to Manly",
+    "park": "Sydney Harbour NP",
+    "difficulty": "Moderate",
+    "rating": 4.7,
+    "review_count": 322,
+    "description": "Classic harbour-side track with lookouts, beaches, and bush.",
+    "start": {
+      "lat": -33.8012,
+      "lng": 151.2448
+    },
+    "coords": [
+      {
+        "lat": -33.8012,
+        "lng": 151.2448
+      },
+      {
+        "lat": -33.8015,
+        "lng": 151.2895
+      }
+    ],
+    "distance_km": 10.0,
+    "ascent_m": 350,
+    "time_hours": 3.5,
+    "dog_friendly": false,
+    "public_transport": true,
+    "tags": [
+      "harbour",
+      "lookouts"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1517059224940-d4af9eec41e5?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "resolute-loop",
+    "name": "Resolute Loop via West Head",
+    "park": "Ku-ring-gai Chase NP",
+    "difficulty": "Moderate",
+    "rating": 4.3,
+    "review_count": 87,
+    "description": "Aboriginal engravings, secluded beaches, and headland views.",
+    "start": {
+      "lat": -33.6124,
+      "lng": 151.2876
+    },
+    "coords": [
+      {
+        "lat": -33.6124,
+        "lng": 151.2876
+      },
+      {
+        "lat": -33.604,
+        "lng": 151.295
+      }
+    ],
+    "distance_km": 6.0,
+    "ascent_m": 220,
+    "time_hours": 2.5,
+    "dog_friendly": false,
+    "public_transport": false,
+    "tags": [
+      "culture",
+      "beach"
+    ],
+    "thumbnail": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1400&auto=format&fit=crop"
+  }
+]

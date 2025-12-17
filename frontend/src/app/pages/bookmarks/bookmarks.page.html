@@ -1,0 +1,132 @@
+<div class="max-w-6xl mx-auto py-6 px-4">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-bush-800 mb-2">My Bookmarks</h1>
+    <p class="text-gray-600">Trails you've saved for later</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="rounded-lg border bg-white p-8 text-center">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-bush-600 border-t-transparent"></div>
+    <p class="mt-4 text-gray-600">Loading your bookmarks...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="rounded-lg border bg-red-50 border-red-200 p-6 text-center">
+    <div class="text-4xl mb-3">⚠️</div>
+    <h2 class="text-lg font-semibold text-red-800 mb-2">Error Loading Bookmarks</h2>
+    <p class="text-red-700">{{ error }}</p>
+    <div class="mt-4 flex justify-center gap-3">
+      <button
+        (click)="loadBookmarks()"
+        class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+      >
+        Try Again
+      </button>
+      <a
+        routerLink="/login"
+        class="px-4 py-2 text-sm font-medium text-white bg-bush-600 rounded-md hover:bg-bush-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500"
+      >
+        Sign In
+      </a>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && trails.length === 0" class="rounded-lg border bg-white p-12 text-center">
+    <div class="text-6xl mb-4">📖</div>
+    <h2 class="text-xl font-semibold text-bush-800 mb-2">No Bookmarks Yet</h2>
+    <p class="text-gray-600 mb-6">Start exploring trails and save your favorites to view them here.</p>
+    <a
+      routerLink="/"
+      class="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-bush-600 rounded-md hover:bg-bush-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500"
+    >
+      Discover Trails
+    </a>
+  </div>
+
+  <!-- Bookmarked Trails Grid -->
+  <div *ngIf="!loading && !error && trails.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <a
+      *ngFor="let trail of trails"
+      [routerLink]="['/trails', trail.slug || trail.id]"
+      class="group rounded-lg border bg-white overflow-hidden hover:shadow-lg transition-shadow duration-200 flex flex-col"
+    >
+      <!-- Trail Image -->
+      <div class="relative h-48 bg-gray-200 overflow-hidden">
+        <img
+          *ngIf="trail.primary_photo?.image"
+          [src]="trail.primary_photo.image"
+          [alt]="trail.name"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+        />
+        <div *ngIf="!trail.primary_photo?.image" class="w-full h-full flex items-center justify-center text-gray-400">
+          <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+
+        <!-- Difficulty Badge -->
+        <div class="absolute top-3 right-3">
+          <span [ngClass]="getDifficultyColor(trail.difficulty)" class="px-2 py-1 text-xs font-semibold rounded-full">
+            {{ trail.difficulty }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Trail Info -->
+      <div class="p-4 flex-1 flex flex-col">
+        <h3 class="text-lg font-semibold text-bush-800 mb-2 group-hover:text-bush-600 transition-colors">
+          {{ trail.name }}
+        </h3>
+
+        <p class="text-sm text-gray-600 mb-3 line-clamp-2 flex-1">
+          {{ trail.description }}
+        </p>
+
+        <!-- Trail Stats -->
+        <div class="flex items-center gap-4 text-xs text-gray-500">
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>{{ formatDistance(trail.distance_km) }}</span>
+          </div>
+
+          <div *ngIf="trail.duration_mins" class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>{{ formatDuration(trail.duration_mins) }}</span>
+          </div>
+
+          <div *ngIf="trail.elev_gain_m" class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            <span>{{ trail.elev_gain_m }}m</span>
+          </div>
+        </div>
+
+        <!-- Rating and Saves -->
+        <div class="flex items-center justify-between mt-3 pt-3 border-t">
+          <div *ngIf="trail.rating_avg && trail.rating_count" class="flex items-center gap-1 text-sm">
+            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <span class="font-medium text-gray-700">{{ trail.rating_avg | number:'1.1-1' }}</span>
+            <span class="text-gray-500">({{ trail.rating_count }})</span>
+          </div>
+
+          <div *ngIf="trail.save_count" class="flex items-center gap-1 text-sm text-gray-500">
+            <svg class="w-4 h-4" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>
+            <span>{{ trail.save_count }}</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

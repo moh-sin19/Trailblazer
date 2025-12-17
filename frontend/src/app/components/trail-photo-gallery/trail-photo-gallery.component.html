@@ -1,0 +1,101 @@
+<div class="photo-gallery" *ngIf="photos && photos.length > 0">
+  <!-- Primary Photo -->
+  <div class="mb-6" *ngIf="getPrimaryPhoto() as primaryPhoto">
+    <div class="relative rounded-lg overflow-hidden shadow-lg cursor-pointer group" (click)="openPhoto(primaryPhoto)">
+      <img
+        [src]="primaryPhoto.image_url"
+        [alt]="primaryPhoto.caption || 'Trail photo'"
+        class="w-full h-96 object-cover group-hover:opacity-90 transition-opacity"
+      />
+      <div class="absolute top-3 right-3 bg-bush-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+        ⭐ Primary
+      </div>
+      <div *ngIf="primaryPhoto.caption" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+        <p class="text-white text-sm">{{ primaryPhoto.caption }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thumbnail Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" *ngIf="getNonPrimaryPhotos().length > 0">
+    <div
+      *ngFor="let photo of getNonPrimaryPhotos()"
+      class="relative rounded-lg overflow-hidden shadow cursor-pointer hover:shadow-lg transition-shadow group"
+      (click)="openPhoto(photo)"
+    >
+      <img
+        [src]="photo.image_url"
+        [alt]="photo.caption || 'Trail photo'"
+        class="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
+      />
+      <div *ngIf="photo.caption" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+        <p class="text-white text-xs truncate">{{ photo.caption }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Modal -->
+  <div
+    *ngIf="selectedPhoto"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    (click)="closePhoto()"
+  >
+    <div class="relative bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+      <!-- Close button -->
+      <button
+        (click)="closePhoto()"
+        class="absolute top-4 right-4 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors"
+        aria-label="Close"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Photo content -->
+      <div class="p-6">
+        <img
+          [src]="selectedPhoto.image_url"
+          [alt]="selectedPhoto.caption || 'Trail photo'"
+          class="w-full rounded-lg mb-4"
+        />
+
+        <div class="space-y-3">
+          <p *ngIf="selectedPhoto.caption" class="text-lg font-medium text-gray-900">
+            {{ selectedPhoto.caption }}
+          </p>
+          <p class="text-sm text-gray-600">
+            Uploaded by <span class="font-medium">{{ selectedPhoto.uploader.display_name }}</span>
+          </p>
+          <p class="text-xs text-gray-500">
+            {{ selectedPhoto.uploaded_at | date: 'medium' }}
+          </p>
+        </div>
+
+        <!-- Actions (only for uploader or admin) -->
+        <div class="mt-6 space-y-2" *ngIf="canManagePhoto(selectedPhoto)">
+          <button
+            *ngIf="!selectedPhoto.is_primary"
+            (click)="setPrimaryPhoto(selectedPhoto)"
+            class="w-full px-4 py-2 bg-bush-600 text-white rounded-md hover:bg-bush-700 transition-colors font-medium"
+          >
+            ⭐ Set as Primary
+          </button>
+          <button
+            (click)="deletePhoto(selectedPhoto)"
+            class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+          >
+            🗑️ Delete Photo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="text-center py-12 bg-gray-50 rounded-lg" *ngIf="!photos || photos.length === 0">
+  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+  </svg>
+  <p class="mt-2 text-gray-500">No photos yet. Be the first to upload!</p>
+</div>

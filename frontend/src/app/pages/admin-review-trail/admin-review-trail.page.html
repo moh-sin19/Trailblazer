@@ -1,0 +1,129 @@
+<div class="max-w-5xl mx-auto py-6">
+  <!-- Notification -->
+  <div
+    *ngIf="notice"
+    class="mb-4 px-4 py-3 text-sm rounded-md border"
+    [ngClass]="notice.kind === 'success'
+      ? 'bg-green-50 text-green-700 border-green-200'
+      : 'bg-red-50 text-red-700 border-red-200'">
+    {{ notice.message }}
+  </div>
+
+  <div *ngIf="loading" class="rounded-lg border bg-white p-6 text-center text-gray-600">
+    Loading trail submission...
+  </div>
+
+  <div *ngIf="!loading && submission" class="space-y-6">
+    <!-- Header with Admin Actions -->
+    <div class="bg-white border rounded-lg p-6">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-3xl font-semibold text-bush-800">{{ submission.name }}</h1>
+          <div class="flex items-center gap-4 mt-2 text-sm text-gray-600">
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              {{ submission.status }}
+            </span>
+            <span>{{ submission.difficulty }}</span>
+            <span>{{ submission.distance_km }} km</span>
+            <span *ngIf="submission.elev_gain_m">{{ submission.elev_gain_m }}m elevation</span>
+          </div>
+        </div>
+        <a routerLink="/admin" class="text-sm text-bush-600 hover:text-bush-700">← Back to Dashboard</a>
+      </div>
+
+      <!-- Admin Actions -->
+      <div class="flex gap-3 pt-4 border-t">
+        <button
+          (click)="approveSubmission()"
+          [disabled]="processing"
+          class="px-4 py-2 rounded-md bg-green-600 text-white font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="!processing">✓ Approve Trail</span>
+          <span *ngIf="processing">Processing...</span>
+        </button>
+        <button
+          (click)="rejectSubmission()"
+          [disabled]="processing"
+          class="px-4 py-2 rounded-md bg-red-600 text-white font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="!processing">✗ Reject Trail</span>
+          <span *ngIf="processing">Processing...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Trail Details -->
+    <div class="bg-white border rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-bush-800 mb-4">Trail Information</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <div class="text-sm text-gray-600">Difficulty</div>
+          <div class="font-medium">{{ submission.difficulty }}</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600">Distance</div>
+          <div class="font-medium">{{ submission.distance_km }} km</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600">Elevation Gain</div>
+          <div class="font-medium">{{ submission.elev_gain_m || 0 }} m</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600">Expected Time</div>
+          <div class="font-medium">{{ submission.expected_time_h || 0 }} hours</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600">Total Points</div>
+          <div class="font-medium">{{ submission.total_points }}</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600">Submitted</div>
+          <div class="font-medium">{{ submission.submitted_at ? (submission.submitted_at | date:'medium') : 'Unknown' }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="submission.description" class="mt-4">
+        <div class="text-sm text-gray-600 mb-1">Description</div>
+        <div class="text-gray-800">{{ submission.description }}</div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div *ngIf="submission.photos && submission.photos.length > 0" class="bg-white border rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-bush-800 mb-4">Photos ({{ submission.photos.length }})</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div *ngFor="let photo of submission.photos" class="relative group">
+          <img
+            [src]="photo.image_url"
+            [alt]="photo.caption || 'Trail photo'"
+            class="w-full h-48 object-cover rounded-lg border">
+          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity rounded-lg"></div>
+          <button
+            (click)="deletePhoto(photo)"
+            class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+            title="Delete photo">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+          <div *ngIf="photo.caption" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-2 rounded-b-lg">
+            {{ photo.caption }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Preview -->
+    <div class="bg-white border rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-bush-800 mb-4">Route Preview</h2>
+      <div class="text-sm text-gray-600">
+        Start: {{ submission.start.lat }}, {{ submission.start.lng }}<br>
+        Segments: {{ submission.segments.length }}<br>
+        Total Points: {{ submission.total_points }}
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !submission" class="bg-white border rounded-lg p-6 text-center text-gray-600">
+    Trail submission not found.
+  </div>
+</div>

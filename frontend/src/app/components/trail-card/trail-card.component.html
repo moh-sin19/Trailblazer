@@ -1,0 +1,31 @@
+<a [routerLink]="['/trails', trail.slug ?? trail.id]" class="block rounded-lg border border-gray-200 overflow-hidden hover:shadow-sm bg-white">
+  <!-- Primary photo if available -->
+  <div *ngIf="trail.primary_photo" class="relative h-48 overflow-hidden bg-gray-100">
+    <img
+      [src]="trail.primary_photo.image_url"
+      [alt]="trail.primary_photo.caption || trail.name"
+      class="w-full h-full object-cover"
+    />
+  </div>
+
+  <div class="p-4">
+    <div class="flex items-center justify-between">
+      <h3 class="font-semibold text-lg text-gray-900">{{ trail.name }}</h3>
+      <span class="text-xs px-2 py-1 rounded bg-bush-50 text-bush-700 border border-bush-200">{{ trail.difficulty }}</span>
+    </div>
+    <p class="mt-1 text-sm text-gray-600">
+      {{ trail.city || trail.country || 'Unknown area' }} • {{ trail.distance_km }} km • ↑ {{ trail.elev_gain_m || 0 }} m
+    </p>
+    <p class="mt-1 text-xs text-gray-500">
+      by
+      <a *ngIf="trail.submitted_by" [routerLink]="['/profile', trail.submitted_by.username]" (click)="$event.stopPropagation()" class="text-bush-600 hover:text-bush-700 hover:underline">
+        {{ trail.submitted_by.display_name }}
+      </a>
+      <span *ngIf="!trail.submitted_by">Trailblazer</span>
+    </p>
+    <div class="mt-2 flex items-center gap-2">
+      <app-star-rating [value]="trail.rating_avg || 0" [readonly]="true" [showValue]="true"></app-star-rating>
+      <span class="text-xs text-gray-500">({{ trail.rating_count || 0 }} reviews)</span>
+    </div>
+  </div>
+</a>

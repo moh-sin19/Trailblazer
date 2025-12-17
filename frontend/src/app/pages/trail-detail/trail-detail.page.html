@@ -1,0 +1,228 @@
+<div class="max-w-5xl mx-auto py-4">
+  <a href="#" onclick="history.back()" class="text-sm text-gray-600 hover:text-gray-800">&larr; Back</a>
+  <div *ngIf="trail; else loading">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+      <div class="lg:col-span-2">
+        <h1 class="mt-3 text-2xl font-semibold">{{ trail.name }}</h1>
+        <p class="text-gray-600">
+          {{ trail.city || trail.country || 'Unknown area' }} • {{ trail.distance_km }} km • ↑ {{ trail.elev_gain_m || 0 }} m • {{ (trail.duration_mins || 0) / 60 | number:'1.2-2' }} h
+          <span class="text-gray-400">•</span>
+          Created by
+          <a *ngIf="trail.submitted_by" [routerLink]="['/profile', trail.submitted_by.username]" class="text-bush-600 hover:text-bush-700 hover:underline">
+            {{ trail.submitted_by.display_name }}
+          </a>
+          <span *ngIf="!trail.submitted_by" class="text-gray-600">Trailblazer</span>
+        </p>
+        <div class="mt-2 flex items-center gap-3">
+          <app-star-rating [value]="trail.rating_avg || 0" [readonly]="true" [showValue]="true"></app-star-rating>
+          <span class="text-xs px-2 py-1 rounded bg-bush-50 text-bush-700 border">{{ trail.difficulty }}</span>
+          <span *ngIf="trail.view_count" class="text-xs text-gray-500 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            {{ trail.view_count }} views
+          </span>
+        </div>
+
+        <!-- Trail Completion and Bookmark Buttons -->
+        <div class="mt-4 flex gap-2">
+          <button
+            *ngIf="!isCompleted"
+            (click)="markComplete()"
+            [disabled]="completingTrail"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bush-600 hover:bg-bush-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            {{ completingTrail ? 'Marking...' : 'Mark as Completed' }}
+          </button>
+          <button
+            *ngIf="isCompleted"
+            (click)="unmarkComplete()"
+            [disabled]="completingTrail"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-bush-700 bg-bush-50 hover:bg-bush-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed border border-bush-200">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Completed
+          </button>
+
+          <!-- Bookmark Button -->
+          <button
+            (click)="toggleBookmark()"
+            [disabled]="bookmarkingTrail"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="isBookmarked
+              ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200'
+              : 'text-gray-700 bg-white hover:bg-gray-50 border border-gray-300'">
+            <svg class="w-4 h-4 mr-2" [attr.fill]="isBookmarked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>
+            {{ bookmarkingTrail ? 'Saving...' : (isBookmarked ? 'Saved' : 'Save Trail') }}
+          </button>
+        </div>
+        <div
+          *ngIf="completionNotice"
+          class="mt-3 px-3 py-2 text-sm rounded-md border"
+          [ngClass]="completionNotice.kind === 'success'
+            ? 'bg-green-50 text-green-700 border-green-200'
+            : 'bg-red-50 text-red-700 border-red-200'">
+          {{ completionNotice.message }}
+        </div>
+
+        <p class="mt-3 text-gray-800">{{ trail.description }}</p>
+        <div class="mt-3" *ngIf="trail.categories?.length">
+          <span *ngFor="let c of trail.categories || []" class="inline-block mr-2 mb-2 text-xs px-2 py-1 rounded bg-gray-100 border">{{ c.name }}</span>
+        </div>
+
+        <div class="mt-6">
+          <h2 class="font-semibold">Route preview</h2>
+          <div class="relative mt-3 h-72 rounded-lg border overflow-hidden bg-gray-50">
+            <div #routeMapEl class="absolute inset-0"></div>
+            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg border border-gray-200 px-3 py-2 text-[11px] text-gray-700">
+              <div class="font-semibold text-gray-800 uppercase tracking-wide mb-1">Map key</div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-1.5 rounded-full" style="background-color:#2a9d8f"></span>
+                  <span>Easy segments</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-1.5 rounded-full" style="background-color:#f4a261"></span>
+                  <span>Moderate segments</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-1.5 rounded-full" style="background-color:#e76f51"></span>
+                  <span>Hard segments</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full border border-white" style="background-color:#059669"></span>
+                  <span>Start</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full border border-white" style="background-color:#1f2937"></span>
+                  <span>Finish</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trail Photos Section -->
+        <div class="mt-6">
+          <h2 class="font-semibold">Photos</h2>
+          <app-trail-photo-gallery
+            *ngIf="trail"
+            [photos]="trail.photos || []"
+            [trailSlug]="trail.slug || trail.id"
+            (photosChanged)="refreshPhotos()"
+          ></app-trail-photo-gallery>
+        </div>
+
+        <!-- Photo Upload Section -->
+        <div class="mt-6">
+          <app-trail-photo-upload
+            *ngIf="trail"
+            [trailSlug]="trail.slug || trail.id"
+            (photoUploaded)="onPhotoUploaded()"
+          ></app-trail-photo-upload>
+        </div>
+
+        <h2 class="mt-6 font-semibold">Add a comment</h2>
+        <div class="mt-2 rounded-lg border p-3 bg-white">
+          <div class="mb-2">
+            <label class="text-sm text-gray-600">Optional rating</label>
+            <app-star-rating [value]="ratingInput" (changed)="ratingInput=$event"></app-star-rating>
+          </div>
+          <textarea [(ngModel)]="commentBody" rows="3" placeholder="How was it? Any tips for others?"
+            class="mt-2 w-full border rounded p-2"></textarea>
+          <button (click)="addComment()" class="mt-2 px-3 py-1.5 rounded bg-bush-600 text-white hover:bg-bush-700">
+            Post comment
+          </button>
+        </div>
+
+        <div class="mt-6 flex items-center justify-between">
+          <h2 class="font-semibold">Comments ({{ comments.length }})</h2>
+          <div class="flex gap-2 text-sm">
+            <button (click)="changeSortBy('helpful')" [class.font-semibold]="sortBy === 'helpful'" class="px-2 py-1">Helpful</button>
+            <button (click)="changeSortBy('newest')" [class.font-semibold]="sortBy === 'newest'" class="px-2 py-1">Newest</button>
+          </div>
+        </div>
+        <div *ngIf="comments.length; else noComments" class="space-y-3 mt-2">
+          <div *ngFor="let c of comments" class="rounded-lg border p-3 bg-white">
+            <div class="flex items-center justify-between">
+              <a [routerLink]="['/profile', c.author.username]" class="font-medium text-bush-700 hover:text-bush-800 hover:underline">
+                {{ c.author.display_name }}
+              </a>
+              <div class="text-xs text-gray-500">
+                {{ c.created_at | date:'mediumDate' }}
+                <span *ngIf="c.edited_at" class="ml-1">(edited)</span>
+              </div>
+            </div>
+            <app-star-rating *ngIf="c.rating" [value]="c.rating" [readonly]="true"></app-star-rating>
+
+            <div *ngIf="editingCommentId === c.id; else viewMode">
+              <app-star-rating *ngIf="editingRating !== null" [value]="editingRating" (changed)="editingRating=$event"></app-star-rating>
+              <textarea [(ngModel)]="editingBody" rows="2" class="mt-1 w-full border rounded p-2"></textarea>
+              <div class="mt-2 flex gap-2">
+                <button (click)="saveEdit()" class="px-2 py-1 text-sm rounded bg-bush-600 text-white hover:bg-bush-700">Save</button>
+                <button (click)="cancelEdit()" class="px-2 py-1 text-sm rounded border hover:bg-gray-50">Cancel</button>
+              </div>
+            </div>
+            <ng-template #viewMode>
+              <div class="mt-1 text-gray-800">{{ c.body }}</div>
+              <div class="mt-2 flex items-center gap-3 text-sm">
+                <button (click)="toggleHelpful(c)" [class.text-bush-600]="c.viewer_reaction === 'like'" class="flex items-center gap-1 hover:text-bush-600">
+                  👍 ({{ c.helpful_count }})
+                </button>
+                <button (click)="startReply(c.id)" class="hover:text-bush-600">Reply</button>
+                <button *ngIf="c.is_owner" (click)="startEdit(c)" class="hover:text-bush-600">Edit</button>
+                <button *ngIf="c.is_owner" (click)="deleteComment(c.id)" class="hover:text-red-600">Delete</button>
+              </div>
+            </ng-template>
+
+            <!-- Reply form -->
+            <div *ngIf="replyingToId === c.id" class="mt-3 ml-6 border-l-2 pl-3">
+              <textarea [(ngModel)]="replyBody" rows="2" placeholder="Write a reply..." class="w-full border rounded p-2"></textarea>
+              <div class="mt-2 flex gap-2">
+                <button (click)="addReply(c.id)" class="px-2 py-1 text-sm rounded bg-bush-600 text-white hover:bg-bush-700">Post reply</button>
+                <button (click)="cancelReply()" class="px-2 py-1 text-sm rounded border hover:bg-gray-50">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Replies -->
+            <div *ngIf="c.replies?.length" class="mt-3 ml-6 space-y-2 border-l-2 pl-3">
+              <div *ngFor="let reply of c.replies" class="rounded border p-2 bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <a [routerLink]="['/profile', reply.author.username]" class="text-sm font-medium text-bush-700 hover:text-bush-800 hover:underline">
+                    {{ reply.author.display_name }}
+                  </a>
+                  <div class="text-xs text-gray-500">{{ reply.created_at | date:'short' }}</div>
+                </div>
+                <div class="mt-1 text-sm text-gray-800">{{ reply.body }}</div>
+                <div class="mt-1 flex items-center gap-2 text-xs">
+                  <button (click)="toggleHelpful(reply)" [class.text-bush-600]="reply.viewer_reaction === 'like'" class="flex items-center gap-1 hover:text-bush-600">
+                    👍 {{ reply.helpful_count }}
+                  </button>
+                  <button *ngIf="reply.is_owner" (click)="deleteComment(reply.id)" class="hover:text-red-600">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noComments><p class="text-sm text-gray-600 mt-2">No comments yet — be the first.</p></ng-template>
+      </div>
+
+      <aside class="lg:col-span-1">
+        <div class="rounded-lg border p-3 bg-white">
+          <h3 class="font-semibold mb-2">Good to know</h3>
+          <ul class="text-sm list-disc list-inside text-gray-700">
+            <li>Download offline map if patchy coverage</li>
+            <li>Check park alerts and fire warnings before you go</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <ng-template #loading><p class="py-8 text-center text-gray-600">Loading…</p></ng-template>
+</div>

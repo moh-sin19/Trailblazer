@@ -1,0 +1,115 @@
+<div class="max-w-6xl mx-auto py-6 space-y-4">
+    <div>
+        <h1 class="text-3xl font-semibold">Submit a new trail</h1>
+        <p class="text-gray-600 mt-2">Help locals discover great walks. Provide enough detail to be helpful and safe,
+            then sketch the route on the map.</p>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start">
+        <form (ngSubmit)="submit()" class="bg-white border rounded-lg p-5 space-y-4 shadow-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label class="text-sm font-medium text-gray-700">Name
+                    <input [(ngModel)]="name" name="name" required
+                        class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bush-500">
+                </label>
+                <label class="text-sm font-medium text-gray-700">Difficulty
+                    <select [(ngModel)]="difficulty" name="difficulty"
+                        class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bush-500">
+                        <option>Easy</option>
+                        <option>Moderate</option>
+                        <option>Hard</option>
+                    </select>
+                </label>
+                <label class="text-sm font-medium text-gray-700">Ascent (m)
+                    <input type="number" min="0" [(ngModel)]="ascent" name="ascent"
+                        class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bush-500">
+                </label>
+                <label class="text-sm font-medium text-gray-700">Expected time (h)
+                    <input type="number" step="0.1" min="0" [(ngModel)]="time" name="time"
+                        class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bush-500">
+                </label>
+            </div>
+
+            <label class="text-sm font-medium text-gray-700 block">Description
+                <textarea [(ngModel)]="description" name="desc" rows="4"
+                    class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bush-500"></textarea>
+            </label>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700 block">Photos (Optional)
+                    <span class="text-xs text-gray-500 font-normal ml-1">Max 5 photos, 10MB each</span>
+                </label>
+                <input #photoInput type="file" accept="image/*" multiple (change)="onPhotosSelected($event)"
+                    class="mt-1 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-bush-50 file:text-bush-700 hover:file:bg-bush-100">
+
+                <!-- Photo Previews -->
+                <div *ngIf="photoPreviewUrls.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                    <div *ngFor="let preview of photoPreviewUrls; let i = index" class="relative group">
+                        <img [src]="preview" [alt]="'Photo preview ' + (i+1)"
+                            class="w-full h-32 object-cover rounded-lg border">
+                        <button type="button" (click)="removePhoto(i)"
+                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t">
+                <div class="text-sm text-gray-600">
+                    <div>Total route distance: <span class="font-semibold text-gray-900">{{ routeDistanceLabel }}</span>
+                    </div>
+                    <div>Points placed: <span class="font-semibold text-gray-900">{{ totalPoints }}</span></div>
+                </div>
+                <button type="submit" [disabled]="submitting || !canSubmit"
+                    class="px-5 py-2.5 rounded-md bg-bush-600 text-white font-medium shadow-sm hover:bg-bush-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bush-500 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span *ngIf="!submitting">Submit trail</span>
+                    <span *ngIf="submitting">Submitting…</span>
+                </button>
+            </div>
+
+            <div
+                *ngIf="submissionNotice"
+                class="mt-3 px-3 py-2 text-sm rounded-md border"
+                [ngClass]="submissionNotice.kind === 'success'
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : 'bg-red-50 text-red-700 border-red-200'">
+                {{ submissionNotice.message }}
+            </div>
+        </form>
+
+        <div class="bg-white border rounded-lg p-5 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Route planner</h2>
+                    <p class="text-sm text-gray-600 mt-1">Click on the map to drop points and outline the trail. You can
+                        add multiple segments for out-and-back tracks.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" (click)="undoLastPoint()" [disabled]="!canUndo"
+                        class="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 disabled:opacity-50 hover:bg-gray-50">Undo</button>
+                    <button type="button" (click)="startNewSegment()" [disabled]="!canStartNewSegment"
+                        class="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 disabled:opacity-50 hover:bg-gray-50">New
+                        segment</button>
+                    <button type="button" (click)="fitRoute()" [disabled]="!canFocusRoute || fittingRoute"
+                        class="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 disabled:opacity-50 hover:bg-gray-50">
+                        <span *ngIf="!fittingRoute">Fit to route</span>
+                        <span *ngIf="fittingRoute">Fitting…</span>
+                    </button>
+                    <button type="button" (click)="clearRoute()" [disabled]="!hasRoute"
+                        class="px-3 py-1.5 text-sm rounded-md border border-rose-300 text-rose-600 disabled:opacity-50 hover:bg-rose-50">Clear</button>
+                </div>
+            </div>
+
+            <div class="bg-bush-50 border border-bush-100 rounded-md px-4 py-3 text-sm text-bush-700">
+                Tip: single clicks drop points. For multi-day tracks add a new segment once you have at least two
+                points. You can always undo the last point if you make a mistake.
+            </div>
+
+            <div #mapEl id="submission-map"
+                class="w-full h-72 sm:h-80 lg:h-[420px] rounded-lg border overflow-hidden bg-gray-100"></div>
+        </div>
+    </div>
+</div>
