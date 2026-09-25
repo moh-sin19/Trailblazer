@@ -1,110 +1,106 @@
-# TrailBlazer (Angular + Tailwind + MapLibre • Django + DRF + PostGIS)
+# Trailblazer
 
-## Stack highlights
-- **Backend:** Django 5, Django REST Framework, GeoDjango/PostGIS, Allauth authentication, CORS ready
-- **Database:** PostgreSQL 17 with the PostGIS extension enabled during migrations
-- **Frontend:** Angular 17 + Tailwind CSS + MapLibre preconfigured to hit the API
-- **Tooling:** Docker Compose, Bash automation scripts, and npm workflows for local development
+A full-stack trail discovery platform for finding, mapping and sharing hiking trails.
+Users browse trails on an interactive map, import their own routes from GPX files, and
+track engagement through live trail and user counters.
 
-## Prerequisites
-- Docker Desktop (Compose v2+) with enough resources for PostgreSQL + Django (≈1 GB free disk), user has access to the Docker daemon
-- Node.js 18+ with `npm` (or `pnpm` if you prefer)
-- Optional: `psql` or another Postgres client if you want to inspect the database manually
+Built solo, Sep - Oct 2025. [Live demo](#) | 
 
-## Quick start
-### Option A — one command (macOS/Linux/WSL)
-```bash
-./run.sh
-```
-The script builds the backend image, applies migrations (which also enable PostGIS), loads the bundled sample trails, starts the Docker services, installs frontend dependencies, and launches the Angular dev server. Press `Ctrl+C` to stop; the script will tear everything down cleanly.
+---
 
-### Option B — manual steps
-```bash
-# 1) Boot the stack (database + backend) and rebuild when Dockerfiles change
-docker compose -f infra/docker-compose.yml up -d --build
+## What it does
 
-# 2) Apply migrations (PostGIS extension is created automatically)
-docker compose -f infra/docker-compose.yml run --rm backend python manage.py migrate --noinput
+- **Map-first discovery** - every trail is a geospatial record. The map renders
+  server-side clustered pins so dense regions stay fast instead of dumping thousands
+  of markers into the browser.
+- **GPX import** - upload a GPS track from a watch or phone and it is parsed,
+  validated and stored as a PostGIS geometry, then rendered as a route on the map.
+- **Event-driven counters** - trail views and user activity are counted through an
+  event pipeline with Redis as the hot store, so counts update in real time without
+  hammering Postgres on every page view.
+- **Accounts and social login** - registration, email verification and third-party
+  auth via django-allauth.
+- **REST API** - the whole thing is API-first (Django REST Framework), so the web
+  client is just one consumer.
 
-# 3) Optional: create/refresh the admin dashboard user
-docker compose -f infra/docker-compose.yml run --rm backend \
-  python manage.py bootstrap_admin --username admin --email admin@example.com --password Admin123! --noinput
+## Tech stack
 
-# 4) Optional: load the bundled sample trails
-docker compose -f infra/docker-compose.yml run --rm backend python manage.py bootstrap_trails
+| Layer | Choice |
+|---|---|
+| API | Django, Django REST Framework |
+| Geospatial | GeoDjango, PostGIS |
+| Database | PostgreSQL |
+| Cache / events | Redis |
+| Auth | django-allauth |
+| Packaging | Docker, docker-compose |
+| Hosting | AWS ECS |
+| CI/CD | GitHub Actions |
 
-# 5) Optional: load the bundled badge data
-docker compose -f infra/docker-compose.yml run --rm backend python manage.py seed_badges
+## Architecture
 
-# 6) (Optional) Enable Graphhopper snapping
-# export GRAPHHOPPER_API_KEY=...
+            +-----------------+
+   client ->|  Django + DRF   |-> PostgreSQL + PostGIS   (trails, routes, users)
+            |   (ECS tasks)   |-> Redis                  (counters, cache)
+            +-----------------+
+                    ^
+                    |
+        GitHub Actions: test -> build image -> push -> deploy to ECS
 
-# 6) Start the Angular dev server
-cd frontend
-npm install      # or: npm ci
-npm start
-```
+Application services are containerised and run as ECS tasks. Every push runs the test
+suite, builds the image and, on main, rolls out a new task definition - no manual
+deploys.
 
-Backend API: http://localhost:8000/api/  
-Angular UI: http://localhost:4200
+## Engineering notes
 
-## Windows setup notes
-- Enable **WSL 2** (Ubuntu or Debian recommended) and install Docker Desktop with WSL integration. Run this project from the WSL filesystem so file watchers and bind mounts stay fast.
-- Run the automation scripts from within WSL: `chmod +x run.sh test.sh` once, then execute `./run.sh` or `./test.sh` as needed.
-- If you prefer PowerShell or Git Bash, use the manual Docker commands above and run `npm install` / `npm start` with Node.js 18+. The Bash scripts require a Unix-compatible shell.
-- Install a Chromium-based browser (Chrome or Edge) so Angular’s `ChromeHeadless` test runner works. From WSL you can also swap to `npm run test:headless` if you rely on Playwright.
-- Docker volume paths are Linux-style inside WSL; no additional `COMPOSE_CONVERT_WINDOWS_PATHS` flag is required.
+**Clustering.** Rendering raw markers does not scale past a few hundred trails. Pins
+are clustered by bounding box and zoom level before serialisation, so the payload size
+stays roughly constant as the dataset grows.
 
-## Useful commands
-- `docker compose -f infra/docker-compose.yml logs -f backend` — follow the Django server output
-- `docker compose -f infra/docker-compose.yml down -v` — stop containers and drop the Postgres volume
-- `docker compose -f infra/docker-compose.yml exec backend bash` — open an interactive shell inside the backend container
-- `./test.sh` — runs the Angular unit tests in headless mode, primes a dashboard admin via `bootstrap_admin`, then executes the Django test suite against Postgres inside Docker
+**GPX parsing.** GPX files are user-supplied and frequently malformed, so import is
+defensive: parse, validate the track geometry, simplify the point set, then persist as
+a PostGIS `LineString` rather than a blob of coordinates. That keeps spatial queries
+(nearby trails, bounding-box search) in the database where they belong.
 
-## Repo layout
-- `backend/` — Django project (`core`) and `trails` app exposing `/api/trails/`
-- `frontend/` — Angular workspace (Tailwind + MapLibre preconfigured)
-- `infra/` — Docker Compose definition for the stack
-- `run.sh` — orchestrates full local startup (Docker + frontend)
-- `test.sh` — convenience script for the backend + frontend test suites
-- `.env` — environment defaults consumed by the backend container
+**Counters.** Writing a row per view does not survive traffic. Increments land in Redis
+and are periodically flushed to Postgres, which keeps reads cheap and write amplification
+bounded while staying eventually accurate.
 
-### Email configuration
-Registration sends verification emails. By default the backend writes emails to the console. To deliver real email, supply SMTP settings via environment variables (e.g. in `.env`):
+**Spatial indexing.** PostGIS GiST indexes back the proximity and bounding-box queries
+that drive both map panning and search.
 
-```env
-DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-DJANGO_DEFAULT_FROM_EMAIL=no-reply@trailblazer.local
-DJANGO_EMAIL_HOST=smtp.example.com
-DJANGO_EMAIL_PORT=587
-DJANGO_EMAIL_HOST_USER=apikey
-DJANGO_EMAIL_HOST_PASSWORD=secret
-DJANGO_EMAIL_USE_TLS=1
-FRONTEND_BASE_URL=http://localhost:4200
-```
+## Running locally
 
-Any Compose restart will pick up the new values.
+git clone https://github.com/<you>/trailblazer.git
+cd trailblazer
+cp .env.example .env          # set DB, Redis and auth credentials
+docker compose up --build     # app, PostGIS and Redis
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py createsuperuser
 
-### Admin dashboard access
-- `run.sh` automatically calls `python manage.py bootstrap_admin` with the environment variables `ADMIN_USERNAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` (defaults: `admin`, `admin@example.com`, `Admin123!`).
-- You can rerun the command at any time to rotate credentials:
+The API is then at `http://localhost:8000/api/`, the admin at `/admin/`.
 
-```bash
-docker compose -f infra/docker-compose.yml run --rm backend \
-  python manage.py bootstrap_admin --username myadmin --email me@example.com --password "NewPassw0rd!" --noinput
-```
+## API
 
-The command updates the Django flags (`is_staff`, `is_superuser`) and lifts the profile role to `admin`, granting access to the custom moderation dashboard without touching unrelated user data.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/trails/` | List trails; supports bounding-box and zoom params for clustering |
+| `GET` | `/api/trails/{id}/` | Trail detail including route geometry |
+| `POST` | `/api/trails/` | Create a trail |
+| `POST` | `/api/trails/import/` | Upload a GPX file and create a trail from it |
+| `GET` | `/api/users/{id}/` | Public user profile and activity counters |
+| `POST` | `/api/auth/...` | Registration, login and social auth (allauth) |
 
-### Graphhopper route fitting
-The submit-trail UI can snap drawn lines to real-world paths via the Graphhopper Routing API. Configure these variables (in `.env` or your shell) before starting the backend:
+## Screenshots
 
-```env
-GRAPHHOPPER_BASE_URL=https://graphhopper.com/api/1
-GRAPHHOPPER_API_KEY=your-api-key
-GRAPHHOPPER_PROFILE=foot
-GRAPHHOPPER_TIMEOUT=10
-GRAPHHOPPER_CACHE_SECONDS=300
-```
+_Add: clustered map view, trail detail with imported GPX route, profile page._
 
-If no API key is supplied the backend gracefully disables the feature and the frontend will fall back to drawing raw segments.
+## Roadmap
+
+- Elevation profiles derived from GPX elevation data
+- Trail reviews and photo uploads
+- Offline route export back to GPX/KML
+- Full-text and filter search (difficulty, distance, region)
+
+## Licence
+
+MIT
