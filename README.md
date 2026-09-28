@@ -4,8 +4,6 @@ A full-stack trail discovery platform for finding, mapping and sharing hiking tr
 Users browse trails on an interactive map, import their own routes from GPX files, and
 track engagement through live trail and user counters.
 
-Built solo, Sep - Oct 2025. [Live demo](#) | 
-
 ---
 
 ## What it does
