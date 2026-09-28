@@ -59,6 +59,7 @@ that drive both map panning and search.
 
 ## Running locally
 
+```
 git clone https://github.com/moh-sin19/trailblazer.git
 
 cd trailblazer
@@ -72,6 +73,7 @@ docker compose exec web python manage.py migrate
 docker compose exec web python manage.py createsuperuser
 
 The API is then at `http://localhost:8000/api/`, the admin at `/admin/`.
+```
 
 ## API
 
