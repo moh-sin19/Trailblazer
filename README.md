@@ -60,10 +60,15 @@ that drive both map panning and search.
 ## Running locally
 
 git clone https://github.com/moh-sin19/trailblazer.git
+
 cd trailblazer
+
 cp .env.example .env          # set DB, Redis and auth credentials
+
 docker compose up --build     # app, PostGIS and Redis
+
 docker compose exec web python manage.py migrate
+
 docker compose exec web python manage.py createsuperuser
 
 The API is then at `http://localhost:8000/api/`, the admin at `/admin/`.
