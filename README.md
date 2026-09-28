@@ -21,6 +21,9 @@ track engagement through live trail and user counters.
 - **REST API** - the whole thing is API-first (Django REST Framework), so the web
   client is just one consumer.
 
+## Demo
+  [Demo (YouTube)](https://www.youtube.com/watch?v=F8znEdy9yoI)
+
 ## Tech stack
 
 | Layer | Choice |
