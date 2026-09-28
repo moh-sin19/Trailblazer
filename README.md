@@ -35,15 +35,6 @@ track engagement through live trail and user counters.
 | CI/CD | GitHub Actions |
 
 ## Architecture
-
-            +-----------------+
-   client ->|  Django + DRF   |-> PostgreSQL + PostGIS   (trails, routes, users)
-            |   (ECS tasks)   |-> Redis                  (counters, cache)
-            +-----------------+
-                    ^
-                    |
-        GitHub Actions: test -> build image -> push -> deploy to ECS
-
 Application services are containerised and run as ECS tasks. Every push runs the test
 suite, builds the image and, on main, rolls out a new task definition - no manual
 deploys.
@@ -87,18 +78,3 @@ The API is then at `http://localhost:8000/api/`, the admin at `/admin/`.
 | `POST` | `/api/trails/import/` | Upload a GPX file and create a trail from it |
 | `GET` | `/api/users/{id}/` | Public user profile and activity counters |
 | `POST` | `/api/auth/...` | Registration, login and social auth (allauth) |
-
-## Screenshots
-
-_Add: clustered map view, trail detail with imported GPX route, profile page._
-
-## Roadmap
-
-- Elevation profiles derived from GPX elevation data
-- Trail reviews and photo uploads
-- Offline route export back to GPX/KML
-- Full-text and filter search (difficulty, distance, region)
-
-## Licence
-
-MIT
